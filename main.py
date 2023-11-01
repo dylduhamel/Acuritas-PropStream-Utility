@@ -2,6 +2,9 @@ import cmd2
 import argparse
 import sys
 from Utility.file_process import read_and_process_file
+from Utility.lead_database_operations import remove_duplicates, json_to_database
+from Utility.skiptrace import skiptrace_leads
+from Utility.sengdrid_api import email_csv
 
 
 class CSVToDatabaseApp(cmd2.Cmd):
@@ -53,6 +56,8 @@ class CSVToDatabaseApp(cmd2.Cmd):
 
 
     """
+    Process file
+
     Process file data and add to database. Removes any duplicates (from those newly added) if they already exist.
 
 
@@ -80,7 +85,38 @@ class CSVToDatabaseApp(cmd2.Cmd):
             self.poutput("You must provide a XLSX or CSV file")
         else:
             self.poutput("File content successfully added to database.")
-            # Remove duplicates here
+            # Remove duplicates
+            remove_duplicates()
+
+    """
+    Skiptrace
+
+    TODO: Instead of checking for the filepath, we must see if they gave any flags. 
+    If they gave the date, we must see if there are elements that can be pulled from that date (Or do nothing and try and skiptrace on that date since it will just throw an error)
+    If no date is given, we must skiptrace on todays date
+
+    """
+    @cmd2.with_argparser(cmd2.Cmd2ArgumentParser())
+    def do_skiptrace(self, _):
+        """Skiptrace."""
+
+        if self.skiptraceCount > 0:
+            # Ask user if they are sure they want to skiptrace as it has already been done
+            user_response = input("You've already performed a skiptrace. Are you sure you want to proceed again? (Y/n) ")
+            if user_response.lower() != "y":
+                return  # Exit the method if user is not sure
+            else:
+                # Call skiptrace function with filePath param
+                skiptrace_leads()
+                json_to_database()
+
+                self.skiptraceCount += 1          
+        else:
+            # Call skiptrace function with filePath param
+            skiptrace_leads()
+            json_to_database()
+
+            self.skiptraceCount += 1
 
     """
     Set file path
@@ -106,52 +142,17 @@ class CSVToDatabaseApp(cmd2.Cmd):
 
         self.poutput(f"File path set to: [{self.filePath}]")
 
+
     """
-    Skiptrace
+    Email
 
-    TODO: Instead of checking for the filepath, we must see if they gave any flags. 
-    If they gave the date, we must see if there are elements that can be pulled from that date (Or do nothing and try and skiptrace on that date since it will just throw an error)
-    If no date is given, we must skiptrace on todays date
-
+    Email skiptraced data. 
     """
     @cmd2.with_argparser(cmd2.Cmd2ArgumentParser())
-    def do_skiptrace(self, _):
-        """Skiptrace."""
+    def do_email(self, _):
+        """Send data via email"""
 
-        if self.filePath == "":
-            # Tell them they must enter filepath first with the set_file_path function
-            self.poutput("You must enter a filepath first using the set_file_path function.")
-            return  # Exit the method 
-        elif self.skiptraceCount > 0:
-            # Ask user if they are sure they want to skiptrace as it has already been done
-            user_response = input("You've already performed a skiptrace. Are you sure you want to proceed again? (Y/n) ")
-            if user_response.lower() != "y":
-                return  # Exit the method if user is not sure
-            else:
-                # Call skiptrace function with filePath param
-                self.perform_skiptrace(
-                    self.filePath
-                ) 
-                self.skiptraceCount += 1          
-        else:
-            # Call skiptrace function with filePath param
-            self.perform_skiptrace(
-                self.filePath
-            ) 
-            self.skiptraceCount += 1
-
-    """
-    THIS WILL BE IMPORTED FROM UTILITY FOR SKIPTRACE
-    """
-
-    def perform_skiptrace(self, filePath):
-        # Placeholder for your actual skiptrace logic
-        self.poutput(f"Performing skiptrace on file: {filePath}")
-
-    @cmd2.with_argparser(cmd2.Cmd2ArgumentParser())
-    def do_print(self, _):
-        """Print the number."""
-        self.poutput(self.number)
+        email_csv()
 
 
 if __name__ == "__main__":

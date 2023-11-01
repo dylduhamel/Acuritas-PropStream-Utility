@@ -1,6 +1,7 @@
 import pandas as pd
 import warnings
 from Utility.lead_database import Lead, Session
+from datetime import date
 
 # Suppress a specific warning from openpyxl
 warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
@@ -44,6 +45,7 @@ def read_and_process_file(file_path):
         # Only create a Lead instance if necessary data is available
         if lead_data:
             lead_instance = Lead(
+                date_added=date.today(),
                 property_address=lead_data.get("property_address", None),
                 property_city=lead_data.get("property_city", None),
                 property_state=lead_data.get("property_state", None),
