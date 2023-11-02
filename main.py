@@ -1,6 +1,8 @@
 import cmd2
 import argparse
 import sys
+import datetime
+import re
 from Utility.file_process import read_and_process_file
 from Utility.lead_database_operations import remove_duplicates, json_to_database
 from Utility.skiptrace import skiptrace_leads
@@ -39,16 +41,19 @@ class CSVToDatabaseApp(cmd2.Cmd):
         
         Available commands:
 
-            process_file [FILE]: Adds file to database, given by filepath, to database. Removes duplicates in the process.
+            process_file [FILE]: Adds file to database, given by filepath, to database.
+            Removes duplicates in the process.
+
             skiptrace [OPTION]: Skiptraces data from database.
                 Options
-                    -no flag: Skiptraces data added on todays date
-                    -date: Skiptraces data added on provided date
+                    no flag: Skiptraces data added on todays date
+                    -d: Skiptraces data added on provided date. Ex: [skiptrace -d 2023-11-01]
+
             email [OPTION]: Emails data added on todays date.
                 Options
-                    -date: Emails data added on given date. 
-            set_file_path [FILE]: Sets the filepath of file to be used. Must be csv or xlsx.
+                    -d: Emails data added on given date. 
 
+            set_file_path [FILE]: Sets the filepath of file to be used. Must be csv or xlsx.
 
         Type 'help' or '?' for more details on commands.
         """
@@ -96,9 +101,26 @@ class CSVToDatabaseApp(cmd2.Cmd):
     If no date is given, we must skiptrace on todays date
 
     """
-    @cmd2.with_argparser(cmd2.Cmd2ArgumentParser())
-    def do_skiptrace(self, _):
+    skiptrace_parser = cmd2.Cmd2ArgumentParser()
+    skiptrace_parser.add_argument('-d', '--date', type=str, help='Date in yyyy-mm-dd format', default=None)
+
+    @cmd2.with_argparser(skiptrace_parser)
+    def do_skiptrace(self, args):
         """Skiptrace."""
+
+        date_to_use = None
+
+        if args.date:
+            # Check if the provided date is valid
+            if not re.match(r'^\d{4}-\d{2}-\d{2}$', args.date):
+                print("Invalid date format. Please use yyyy-mm-dd.")
+                return
+            try:
+                datetime.datetime.strptime(args.date, '%Y-%m-%d')
+                date_to_use = args.date
+            except ValueError:
+                print("Invalid date provided.")
+                return
 
         if self.skiptraceCount > 0:
             # Ask user if they are sure they want to skiptrace as it has already been done
@@ -106,14 +128,15 @@ class CSVToDatabaseApp(cmd2.Cmd):
             if user_response.lower() != "y":
                 return  # Exit the method if user is not sure
             else:
-                # Call skiptrace function with filePath param
-                skiptrace_leads()
+                # Call skiptrace function with filePath param and date
+                skiptrace_leads(date_to_use)
                 json_to_database()
 
-                self.skiptraceCount += 1          
+                self.skiptraceCount += 1     
+
         else:
-            # Call skiptrace function with filePath param
-            skiptrace_leads()
+            # Call skiptrace function with filePath param and date
+            skiptrace_leads(date_to_use)
             json_to_database()
 
             self.skiptraceCount += 1
