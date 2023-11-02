@@ -1,3 +1,7 @@
+# Data privacy
+Data/csv_exports/
+Data/Skiptrace
+
 # Ignore Python bytecode files
 **/__pycache__/
 

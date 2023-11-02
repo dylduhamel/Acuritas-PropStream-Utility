@@ -46,11 +46,12 @@ class CSVToDatabaseApp(cmd2.Cmd):
 
             skiptrace [OPTION]: Skiptraces data from database.
                 Options
-                    no flag: Skiptraces data added on todays date
+                    no flag: Skiptraces data added today.
                     -d: Skiptraces data added on provided date. Ex: [skiptrace -d 2023-11-01]
 
             email [OPTION]: Emails data added on todays date.
                 Options
+                    no flag: Emails data added today.
                     -d: Emails data added on given date. Ex: [email -d 2023-11-01]
 
             set_file_path [FILE]: Sets the filepath of file to be used. Must be csv or xlsx.
