@@ -51,7 +51,7 @@ class CSVToDatabaseApp(cmd2.Cmd):
 
             email [OPTION]: Emails data added on todays date.
                 Options
-                    -d: Emails data added on given date. 
+                    -d: Emails data added on given date. Ex: [email -d 2023-11-01]
 
             set_file_path [FILE]: Sets the filepath of file to be used. Must be csv or xlsx.
 
@@ -171,11 +171,28 @@ class CSVToDatabaseApp(cmd2.Cmd):
 
     Email skiptraced data. 
     """
-    @cmd2.with_argparser(cmd2.Cmd2ArgumentParser())
-    def do_email(self, _):
+    email_parser = cmd2.Cmd2ArgumentParser()
+    email_parser.add_argument('-d', '--date', type=str, help='Date in yyyy-mm-dd format', default=None)
+
+    @cmd2.with_argparser(email_parser)
+    def do_email(self, args):
         """Send data via email"""
 
-        email_csv()
+        date_to_use = None
+
+        if args.date:
+            # Check if the provided date is valid
+            if not re.match(r'^\d{4}-\d{2}-\d{2}$', args.date):
+                print("Invalid date format. Please use yyyy-mm-dd.")
+                return
+            try:
+                datetime.datetime.strptime(args.date, '%Y-%m-%d')
+                date_to_use = args.date
+            except ValueError:
+                print("Invalid date provided.")
+                return
+
+        email_csv(date_to_use)
 
 
 if __name__ == "__main__":

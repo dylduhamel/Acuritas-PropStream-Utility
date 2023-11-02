@@ -8,18 +8,19 @@ from Utility.lead_database import Session, Lead
 from datetime import date
 from sqlalchemy import or_
 
-def email_csv():
+def email_csv(chosenDate=None):
     # Load .env file
     load_dotenv()
 
     # Initialize the session
     session = Session()
 
-    # Query for values added today
-    today = date.today()
+    # Query for values added for date
+    if chosenDate is None:
+        chosenDate = date.today()
     #today = "09/27/2023" # If you want to skiptrace date other than today 
 
-    leadData = session.query(Lead).filter(Lead.date_added == today, 
+    leadData = session.query(Lead).filter(Lead.date_added == chosenDate, 
                                              Lead.first_name_owner != None, 
                                              Lead.first_name_owner != '', 
                                              Lead.phone_number_1 != None, 
@@ -70,7 +71,7 @@ def email_csv():
     message = Mail(
         from_email=FROM_EMAIL,
         to_emails=(TO_EMAIL, TO_EMAIL_SELF),
-        subject=f'New data from {date.today()}',
+        subject=f'New data from {chosenDate}',
         plain_text_content='Please see attached for most recent PropStream Data.'
     )
 
